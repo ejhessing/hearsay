@@ -1,10 +1,109 @@
+import { MicrophoneIcon, PauseIcon } from "@heroicons/react/24/solid";
+import dynamic from "next/dynamic";
 import Head from "next/head";
 import { useState } from "react";
 import styles from "../styles/Home.module.css";
 
-export default function Home() {
+let socket: any;
+let recorder: any = null;
+const Home = () => {
   const [fontSize, setFontSize] = useState(16);
   const [text, setText] = useState("Hello World");
+  const [isListening, setIsListening] = useState(false);
+
+  const run = async () => {
+    if (isListening) {
+      if (socket) {
+        socket.send(JSON.stringify({ terminate_session: true }));
+        socket.close();
+        socket = null;
+      }
+
+      if (recorder) {
+        recorder.pauseRecording();
+        recorder = null;
+      }
+    } else {
+      const response = await fetch("/api/token"); // get temp session token from server.js (backend)
+      const data = await response.json();
+
+      if (data.error) {
+        alert(data.error);
+      }
+
+      const { token } = data;
+
+      // establish wss with AssemblyAI (AAI) at 16000 sample rate
+      socket = await new WebSocket(
+        `wss://api.assemblyai.com/v2/realtime/ws?sample_rate=16000&token=${token}`
+      );
+
+      const texts: Record<string, string> = {};
+      socket.onmessage = (message: { data: string }) => {
+        let msg = "";
+        const res = JSON.parse(message.data);
+        texts[res.audio_start] = res.text;
+        const keys = Object.keys(texts);
+        keys.sort((a, b) => a - b);
+        for (const key of keys) {
+          if (texts[key]) {
+            msg += ` ${texts[key]}`;
+          }
+        }
+        setText(msg);
+      };
+
+      socket.onerror = (event: any) => {
+        console.error(event);
+        socket.close();
+      };
+
+      socket.onclose = (event: any) => {
+        console.log(event);
+        socket = null;
+      };
+
+      socket.onopen = async () => {
+        const RecordRTC = (await import("recordrtc")).default;
+        console.log(JSON.stringify(RecordRTC));
+        navigator.mediaDevices
+          .getUserMedia({ audio: true })
+          .then((stream) => {
+            const recorderStream = new RecordRTC(stream, {
+              type: "audio",
+              mimeType: "audio/webm;codecs=pcm", // endpoint requires 16bit PCM audio
+              recorderType: RecordRTC.StereoAudioRecorder,
+              timeSlice: 250, // set 250 ms intervals of data that sends to AAI
+              desiredSampRate: 16000,
+              numberOfAudioChannels: 1, // real-time requires only one channel
+              bufferSize: 4096,
+              audioBitsPerSecond: 128000,
+              ondataavailable: (blob) => {
+                const reader = new FileReader();
+                reader.onload = () => {
+                  const base64data = reader.result as string;
+
+                  // audio data must be sent as a base64 encoded string
+                  if (socket && base64data) {
+                    socket.send(
+                      JSON.stringify({
+                        audio_data: base64data.split("base64,")[1],
+                      })
+                    );
+                  }
+                };
+                reader.readAsDataURL(blob);
+              },
+            });
+            recorder = recorderStream;
+            recorder.startRecording();
+          })
+          .catch((err) => console.error(err));
+      };
+    }
+
+    setIsListening(!isListening);
+  };
 
   return (
     <div className={styles.container}>
@@ -19,8 +118,27 @@ export default function Home() {
           {text}
         </div>
 
-        <div className="w-4/5 h-1/5"></div>
+        <div className="w-4/5 h-1/5 flex justify-center items-center">
+          <div className="rounded-full m-2 border-2 border-white">
+            {/* record icon button */}
+            <button
+              className="bg-red-500 hover:bg-red-700 text-white font-bold p-6 rounded-full m-1"
+              onClick={() => {
+                run();
+              }}
+            >
+              {!isListening && (
+                <MicrophoneIcon className="h-10 w-10 text-white" />
+              )}
+              {isListening && <PauseIcon className="h-10 w-10 text-white" />}
+            </button>
+          </div>
+        </div>
       </main>
     </div>
   );
-}
+};
+
+export default dynamic(() => Promise.resolve(Home), {
+  ssr: false,
+});
