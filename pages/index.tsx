@@ -1,15 +1,40 @@
 import { MicrophoneIcon, PauseIcon } from "@heroicons/react/24/solid";
+import cn from "classnames";
 import dynamic from "next/dynamic";
 import Head from "next/head";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import styles from "../styles/Home.module.css";
 
 let socket: any;
 let recorder: any = null;
+
+const fontSizes = [
+  "text-base",
+  "text-xl",
+  "text-2xl",
+  "text-4xl",
+  "text-5xl",
+  "text-6xl",
+  "text-7xl",
+  "text-8xl",
+  "text-9xl",
+];
 const Home = () => {
-  const [fontSize, setFontSize] = useState(16);
+  const [fontSizeIndex, setFontSizeIndex] = useState(0);
   const [text, setText] = useState("Hello World");
   const [isListening, setIsListening] = useState(false);
+
+  useEffect(() => {
+    if (
+      localStorage.theme === "dark" ||
+      (!("theme" in localStorage) &&
+        window.matchMedia("(prefers-color-scheme: dark)").matches)
+    ) {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+  }, []);
 
   const run = async () => {
     if (isListening) {
@@ -114,7 +139,12 @@ const Home = () => {
       </Head>
 
       <main className="flex flex-col items-center justify-center my-5 h-screen w-full">
-        <div className="w-4/5 h-4/5 border-2 border-solid border-red-500 p-5 text-xl tracking-wide">
+        <div
+          className={cn(
+            "w-4/5 h-4/5 border-2 border-solid border-red-500 p-5 text-xl tracking-wide",
+            `${fontSizes[fontSizeIndex]}`
+          )}
+        >
           {text}
         </div>
 
