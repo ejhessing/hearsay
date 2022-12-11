@@ -1,34 +1,17 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+THis application was made as part of the Assembly AI Hackathon. It is a simple web application that allows users to record a conversation and then transcribe it.
 
-## Getting Started
+## The problem:
 
-First, run the development server:
+My Grandmother is 99 years old and for the last 20 years has not been able to hear very well. She did not want to get a hearing aid and therefore the only we have to communicate with her is through writing. We write out questions and she speaks back to us. This works for the most part, but it is very time consuming and we often miss things. A common scenario is we are in the mitts of writing out a reply to one of her questions, but then she's moved on to a new topic or question, making it difficult to keep up.
 
-```bash
-npm run dev
-# or
-yarn dev
-```
+## The solution:
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+I wanted to create a simple application that would allow us to have a conversation at close to normal speed, where she could ask me something, and read my reply as I speak it. I have also made the UI a little more friendly for her to use. As you can imagine at 99 she's not tech savvy in the slightest and therefor creating big buttons, have a few fonts for her to see which is more pleasant for her to read and a way to make it dark mode if that helps the with readability.
 
-You can start editing the page by modifying `pages/index.tsx`. The page auto-updates as you edit the file.
+## To Run this application:
 
-[API routes](https://nextjs.org/docs/api-routes/introduction) can be accessed on [http://localhost:3000/api/hello](http://localhost:3000/api/hello). This endpoint can be edited in `pages/api/hello.ts`.
-
-The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/api-routes/introduction) instead of React pages.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+1. Clone the repo
+2. Copy .env.sample to .env and fill in the values (Will need an API key from assemblyAI and it needs to be on the PRO plan to get the real time transacription)
+3. Run `npm install`
+4. Run `npm start`
+5. Go to `localhost:3000` in your browser
