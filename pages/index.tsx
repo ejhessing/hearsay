@@ -75,6 +75,7 @@ const Home = () => {
         console.log(message.data);
         texts[res.audio_start] = res.text;
         const keys = Object.keys(texts);
+        // @ts-ignore
         keys.sort((a, b) => a - b);
         for (const key of keys) {
           if (texts[key]) {
