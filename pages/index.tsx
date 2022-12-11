@@ -5,6 +5,7 @@ import Head from "next/head";
 import { useEffect, useState } from "react";
 import ThemeToggle from "../modules/components/ThemeToggle";
 import FontSizes from "../modules/FontSizes";
+import { FontTypes } from "../modules/FontTypes";
 
 let socket: any;
 let recorder: any = null;
@@ -24,6 +25,8 @@ const Home = () => {
   const [fontSizeIndex, setFontSizeIndex] = useState(0);
   const [text, setText] = useState("Hello World");
   const [isListening, setIsListening] = useState(false);
+  const [font, setFont] = useState("serif");
+  const [token, setToken] = useState("");
 
   useEffect(() => {
     if (
@@ -50,15 +53,16 @@ const Home = () => {
         recorder = null;
       }
     } else {
-      const response = await fetch("/api/token"); // get temp session token from server.js (backend)
-      const data = await response.json();
+      if (!token) {
+        const response = await fetch("/api/token"); // get temp session token from server.js (backend)
+        const data = await response.json();
 
-      if (data.error) {
-        alert(data.error);
+        if (data.error) {
+          alert(data.error);
+        }
+
+        setToken(data.token);
       }
-
-      const { token } = data;
-
       // establish wss with AssemblyAI (AAI) at 16000 sample rate
       socket = await new WebSocket(
         `wss://api.assemblyai.com/v2/realtime/ws?sample_rate=16000&token=${token}`
@@ -68,6 +72,7 @@ const Home = () => {
       socket.onmessage = (message: { data: string }) => {
         let msg = "";
         const res = JSON.parse(message.data);
+        console.log(message.data);
         texts[res.audio_start] = res.text;
         const keys = Object.keys(texts);
         keys.sort((a, b) => a - b);
@@ -139,7 +144,14 @@ const Home = () => {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <main className="flex flex-col items-center justify-center py-5 h-screen w-full dark:bg-slate-800 bg-slate-50">
+      <main
+        className={cn(
+          "flex flex-col items-center justify-center py-5 h-screen w-full dark:bg-slate-800 bg-slate-50",
+          { "font-mono": font === "mono" },
+          { "font-serif": font === "serif" },
+          { "font-sans": font === "sans" }
+        )}
+      >
         <div className="w-4/5 flex justify-end dark:text-slate-100 text-slate-800">
           <ThemeToggle />
         </div>
@@ -152,7 +164,8 @@ const Home = () => {
           {text}
         </div>
 
-        <div className="w-4/5 h-1/5 flex justify-center items-center">
+        <div className="w-4/5 h-1/5 flex justify-between items-center">
+          <FontTypes font={font} setFont={setFont} />
           <div className="rounded-full m-2 border-2 dark:border-slate-100 border-slate-800">
             {/* record icon button */}
             <button
